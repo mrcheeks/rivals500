@@ -1,12 +1,16 @@
-import { StyleSheet, Text, View, Image } from "react-native";
 import React from "react";
+import { Image, StyleSheet, View } from "react-native";
 
-const Logo = () => {
+interface SpacerProps {
+    size?: number;
+}
+
+const Logo = ({ size = 120 }: SpacerProps) => {
   return (
     <View>
       <Image
         source={require("../assets/images/logo.png")}
-        style={{ width: 250, height: 182}}
+        style={{ width: size, height: size }}
       />
     </View>
   );

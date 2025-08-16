@@ -1,9 +1,7 @@
 // SessionProvider.tsx
-import * as Linking from 'expo-linking';
-import { openAuthSessionAsync } from 'expo-web-browser';
-import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import { Platform } from 'react-native';
-import { Account, Client, OAuthProvider } from 'react-native-appwrite';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { Alert, AppState } from 'react-native';
+import { Account, AppwriteException, Client, ID } from 'react-native-appwrite';
 
 
 type User = {
@@ -16,11 +14,12 @@ type User = {
 interface SessionContextType {
     User: User | null;
     loading: boolean;
-    authState: 'authenticated' | 'unauthenticated' | 'pending';
-    loginWithOAuth: (provider: OAuthProvider) => Promise<void>;
+    mode: 'authenticated' | 'login' | 'signup' | 'pending';
+    checkingUser: boolean;
+    setMode: React.Dispatch<React.SetStateAction<'authenticated' | 'login' | 'signup' | 'pending'>>;
+    handleAuth: (email: string, password: string, name: string) => Promise<void>;
     // Add other methods as needed, e.g., signOut
-    signOut: () => void;
-    reloadUser: () => void;
+    handleLogout: () => void;
 }
 
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
@@ -36,97 +35,93 @@ const account = new Account(client);
 // Create the SessionProvider component
 const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
-    const [authState, setAuthState] = useState<'authenticated' | 'unauthenticated' | 'pending'>('pending');
+    const [mode, setMode] = useState<"authenticated" |"login" | "signup" | "pending">("pending");
     const [User, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
+    const [checkingUser, setCheckingUser] = useState(true);
 
   // Check for existing session
-    useEffect(() => {
-        if (authState === 'pending') {
+    const handleAuth = async (email: string, password: string, name: string) => {
+    setLoading(true);
+    try {
+      if (mode === "signup") {
+        await account.create(ID.unique(), email, password);
+        Alert.alert("Signup successful! Please login.");
+        setMode("login");
+      } else {
+        await account.createEmailPasswordSession(email, password);
+        Alert.alert("Login successful!");
+        const user = await account.get();
+        setUser({
+            id: user.$id,
+            name: name,
+            email: email
+        });
+        setMode("authenticated");
+      }
+    } catch (err) {
+      if (err instanceof AppwriteException) {
+        console.log("Appwrite error:", err);
+        Alert.alert(err.message);
+      } else {
+        Alert.alert("An error occurred");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
-            (async () => {
+  const handleLogout = async () => {
+    await account.deleteSession("current");
+    setUser(null);
+    setMode("pending");
+  };
 
-                const user = await account.get().catch(e => {
-                    console.warn('Error fetching user data:', e);
-                    return null;
-                });
-                if (user) {
-                    setUser({
-                        id: user.$id,
-                        name: user.name,
-                        email: user.email,
-                    });
-                    setAuthState('authenticated');
-                } else {
-                    setAuthState('unauthenticated');
-                }
-            })();
-
-            //checkSession();
-        }
-    }, [authState]);
-
-    const loginWithOAuth = async (provider: OAuthProvider) => {
-         try {
-            const redirectUri = Linking.createURL("/");
-
-            console.log("Platform:", Platform.OS);
-            console.log("Redirect URI:", redirectUri);
-            
-            // Use createOAuth2Token for android and ios to ensure cookies
-            // are shared between app and in-app browser after redirection
-            const response = account.createOAuth2Token(
-            OAuthProvider.Google,
-            redirectUri
-            );
-            if (!response) throw new Error("Create OAuth2 token failed");
-
-            const browserResult = await openAuthSessionAsync(
-            response.toString(),
-            redirectUri
-            );
-
-            if (browserResult.type !== "success")
-            throw new Error("Create OAuth2 token failed");
-
-            console.log("Browser Result: ", browserResult);
-
-            const url = new URL(browserResult.url);
-            const secret = url.searchParams.get("secret")?.toString();
-            const userId = url.searchParams.get("userId")?.toString();
-            if (!secret || !userId) throw new Error("Create OAuth2 token failed");
-
-            // Create session manually using userId and secret
-            await account.createSession(userId, secret);
-
-            // Return the newly created session
-            const currentSession = await account.getSession("current");
-            if (!currentSession) {
-                throw new Error("Failed to create session after OAuth authentication");
-            }
-            
-            setAuthState('pending');
-
-            
-        } catch (error) {
-            console.error("Login error:", error);
-
-        }
-    };
-    
-    // Sign out
-    const signOut = useCallback(async () => {
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const user = await account.get();
+        setUser({
+            id: user.$id,
+            name: user.name,
+            email: user.email
+        });
+        setMode("authenticated");
+      } catch (err) {
+        console.log("Error fetching user", err);
         setUser(null);
-        await account.deleteSession('current');
-        setAuthState('pending');
-    }, []);
+      } finally {
+        setCheckingUser(false);
+      }
+    };
+    fetchUser();
+  }, []);
 
-    const reloadUser = useCallback(async () => {
-        setAuthState('pending');
-    }, []);
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", async (nextAppState) => {
+      if (nextAppState === "active") {
+        try {
+          const user = await account.get();
+          setUser({
+            id: user.$id,
+            name: user.name,
+            email: user.email
+          });
+          setMode("authenticated");
+        } catch (err) {
+          setUser(null);
+        }
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
+
 
     return (
-        <SessionContext.Provider value={{ User, authState, loading, loginWithOAuth, signOut, reloadUser }}>
+        <SessionContext.Provider value={{ User, mode, loading, checkingUser, setMode, handleAuth, handleLogout }}>
         {children}
         </SessionContext.Provider>
     );
