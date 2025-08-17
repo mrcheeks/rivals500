@@ -172,7 +172,7 @@ export default function Home() {
   return (
     <>
       <SafeAreaView style={main.containerCentred}>
-        <Logo />
+        <Logo size={200}/>
         <Spacer height={20} />
         {User?.name ? (
           <Text style={main.introText}>Hello, {User?.name}!</Text>
