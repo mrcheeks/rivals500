@@ -43,9 +43,22 @@ const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) 
   // Check for existing session
     const handleAuth = async (email: string, password: string, name: string) => {
     setLoading(true);
+    if (mode === "signup") {
+            if(name === "" || email === "" || password === "") {
+                Alert.alert("Please fill in all fields");
+                setLoading(false);
+            return;
+        }
+    } else {
+        if(email === "" || password === "") {
+            Alert.alert("Please fill in all fields");
+            setLoading(false);
+            return;
+        }
+    }
     try {
       if (mode === "signup") {
-        await account.create(ID.unique(), email, password);
+        await account.create(ID.unique(), email, password, name);
         Alert.alert("Signup successful! Please login.");
         setMode("login");
       } else {

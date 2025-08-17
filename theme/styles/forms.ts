@@ -1,81 +1,61 @@
+import { Platform } from "react-native";
 import { ScaledSheet } from "react-native-size-matters";
-import { COLOURS } from "../colours";
 
 const forms = ScaledSheet.create({
-  input: {
-    marginVertical: 4,
-    height: 50,
-    borderWidth: 1,
-    borderRadius: 10,
-    borderColor: COLOURS.lightGrey,
-    padding: 10,
-    color: COLOURS.white2nd,
-    backgroundColor: COLOURS.inputBkg,
-  },
-  error: {
-    color: COLOURS.lightGrey,
-    fontSize: 12,
-    marginBottom: 12,
-  },
-  errorInput: {
-    borderColor: "red",
-  },
-  checkbox: {
-    margin: 8,
-    width: 30,
-    height: 30,
-  },
-  datePicker: {
-    height: 120,
-    margin: -10,
-  },
-  dropdownButtonStyle: {
-    height: "50@s",
-    backgroundColor: COLOURS.inputBkg,
-    borderWidth: 1,
-    borderRadius: 10,
-    borderColor: COLOURS.lightGrey,
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 12,
-    marginVertical: 4
-  },
-  dropdownButtonTxtStyle: {
-    flex: 1,
-    color: COLOURS.white2nd,
-  },
-  dropdownButtonArrowStyle: {
-    fontSize: 28,
-  },
-  dropdownButtonIconStyle: {
-    fontSize: 28,
-    marginRight: 8,
-    color: COLOURS.white2nd,
-  },
-  dropdownMenuStyle: {
-    backgroundColor: COLOURS.inputBkg,
-    borderRadius: 8,
-  },
-  dropdownItemStyle: {
-    width: "100%",
-    flexDirection: "row",
-    paddingHorizontal: 12,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingVertical: 8,
-  },
-  dropdownItemTxtStyle: {
-    flex: 1,
-    fontSize: 18,
-    fontWeight: "500",
-    color: COLOURS.white2nd,
-  },
-  dropdownItemIconStyle: {
-    fontSize: 28,
-    marginRight: 8,
-    color: COLOURS.white2nd,
-  },
+  formHeader: {
+      marginBottom: 32,
+      alignItems: "center",
+    },
+    formTitle: {
+      fontSize: 24,
+      fontWeight: "600",
+      color: "#ffffff",
+      marginBottom: 8,
+    },
+    titleUnderline: {
+      width: 100,
+      height: 3,
+      backgroundColor: "#ff0000",
+      borderRadius: 2,
+    },
+    inputContainer: {
+      marginBottom: 24,
+    },
+    inputWrapper: {
+      marginBottom: 20,
+    },
+    inputLabel: {
+      fontSize: 14,
+      fontWeight: "500",
+      color: "#efefef",
+      marginBottom: 8,
+      marginLeft: 4,
+    },
+    input: {
+      borderWidth: 2,
+      borderColor: "#3d3d3d",
+      borderRadius: 12,
+      padding: 16,
+      fontSize: 16,
+      backgroundColor: "#000000",
+      color: "#ffffff",
+    },
+    inputFocused: {
+      borderColor: "#7c7c7cff",
+      backgroundColor: "#000000",
+      ...Platform.select({
+        web: {
+          boxShadow: "0px 0px 0px 2px rgba(234, 102, 102, 0.5)",
+        },
+        default: {
+          shadowColor: "#ff0000",
+          shadowOffset: { width: 0, height: 0 },
+          shadowOpacity: 0.1,
+          shadowRadius: 8,
+          elevation: 4,
+        },
+      }),
+    },
 });
 
 export default forms;

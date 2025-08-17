@@ -1,10 +1,11 @@
 import { useSession } from '@/providers/SessionProvider';
-import { COLOURS } from '@/theme/colours';
-import { KeyboardAvoidingView, Platform, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, SafeAreaView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 import Logo from '@/components/Logo';
 import Spacer from '@/components/Spacer';
+import forms from '@/theme/styles/forms';
 import main from '@/theme/styles/main';
+import { router } from 'expo-router';
 import React, { useState } from 'react';
 
 export default function Home() {
@@ -21,34 +22,34 @@ export default function Home() {
 
   if(mode === 'pending') {
     return (
-      <SafeAreaView style={styles.containerCentred}>
+      <SafeAreaView style={main.containerCentred}>
         <Logo size={200} />
         <Spacer height={60} />
         <View style={{paddingHorizontal: 20}}>
-          <Text style={styles.introText}>
+          <Text style={main.introText}>
               {"Welcome to Rivals 500, the 500 score tracker. Never lose track of your Rivals."}
           </Text>
           <Spacer height={20} />
           <TouchableOpacity
             style={[
-              styles.primaryButton,
-              loading && styles.buttonDisabled,
+              main.primaryButton,
+              loading && main.buttonDisabled,
             ]}
             onPress={() => setMode("signup")}
           >
-            <Text style={styles.primaryButtonText}>
+            <Text style={main.primaryButtonText}>
               {"Create Account"}
             </Text>
           </TouchableOpacity>
           <Spacer height={20} />
           <TouchableOpacity
             style={[
-              styles.secondaryButton,
-              loading && styles.buttonDisabled,
+              main.secondaryButton,
+              loading && main.buttonDisabled,
             ]}
             onPress={() => setMode("login")}
           >
-            <Text style={styles.secondaryButtonText}>
+            <Text style={main.secondaryButtonText}>
               {"Sign In"}
             </Text>
           </TouchableOpacity>
@@ -59,26 +60,45 @@ export default function Home() {
 
   if(mode === 'login' || mode === 'signup') {
     return (
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.containerCentred}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={main.containerCentred}>
         <Logo />
         <Spacer height={40} />
         <View>
           {/* Form Header */}
-          <View style={styles.formHeader}>
-            <Text style={styles.formTitle}>
+          <View style={forms.formHeader}>
+            <Text style={forms.formTitle}>
               {mode === "login" ? "Sign In" : "Create Account"}
             </Text>
-            <View style={styles.titleUnderline} />
+            <View style={forms.titleUnderline} />
           </View>
 
           {/* Input Fields */}
-          <View style={styles.inputContainer}>
-            <View style={styles.inputWrapper}>
-              <Text style={styles.inputLabel}>Email Address</Text>
+          <View style={forms.inputContainer}>
+            {mode === 'signup' && (
+              <View style={forms.inputWrapper}>
+                <Text style={forms.inputLabel}>Name</Text>
+                <TextInput
+                  style={[
+                    forms.input,
+                    focusedInput === "name" && forms.inputFocused,
+                ]}
+                placeholder="Enter your name"
+                placeholderTextColor="#9CA3AF"
+                autoCapitalize="none"
+                keyboardType="default"
+                value={name}
+                onChangeText={setName}
+                onFocus={() => setFocusedInput("name")}
+                onBlur={() => setFocusedInput(null)}
+              />
+            </View>
+            )}
+            <View style={forms.inputWrapper}>
+              <Text style={forms.inputLabel}>Email Address</Text>
               <TextInput
                 style={[
-                  styles.input,
-                  focusedInput === "email" && styles.inputFocused,
+                  forms.input,
+                  focusedInput === "email" && forms.inputFocused,
                 ]}
                 placeholder="Enter your email"
                 placeholderTextColor="#9CA3AF"
@@ -91,12 +111,12 @@ export default function Home() {
               />
             </View>
 
-            <View style={styles.inputWrapper}>
-              <Text style={styles.inputLabel}>Password</Text>
+            <View style={forms.inputWrapper}>
+              <Text style={forms.inputLabel}>Password</Text>
               <TextInput
                 style={[
-                  styles.input,
-                  focusedInput === "password" && styles.inputFocused,
+                  forms.input,
+                  focusedInput === "password" && forms.inputFocused,
                 ]}
                 placeholder="Enter your password"
                 placeholderTextColor="#9CA3AF"
@@ -112,13 +132,13 @@ export default function Home() {
           {/* Primary Action Button */}
           <TouchableOpacity
             style={[
-              styles.primaryButton,
-              loading && styles.buttonDisabled,
+              main.primaryButton,
+              loading && main.buttonDisabled,
             ]}
             onPress={() => handleAuth(email, password, name)}
             disabled={loading}
           >
-            <Text style={styles.primaryButtonText}>
+            <Text style={main.primaryButtonText}>
               {loading
                 ? "Please wait..."
                 : mode === "login"
@@ -129,14 +149,14 @@ export default function Home() {
 
           {/* Mode Switch */}
           <TouchableOpacity
-            style={styles.switchMode}
+            style={main.switchMode}
             onPress={() => setMode(mode === "login" ? "signup" : "login")}
           >
-            <Text style={styles.switchModeText}>
+            <Text style={main.switchModeText}>
               {mode === "login"
                 ? "Don't have an account? "
                 : "Already have an account? "}
-              <Text style={styles.switchModeLink}>
+              <Text style={main.switchModeLink}>
                 {mode === "login" ? "Sign Up" : "Sign In"}
               </Text>
             </Text>
@@ -148,274 +168,59 @@ export default function Home() {
   
   return (
     <>
-      <SafeAreaView style={styles.containerCentred}>
+      <SafeAreaView style={main.containerCentred}>
         <Logo />
-        <Spacer height={60} />
-        <Text style={main.pTextCenter}>Hello, {User?.name || User?.email || "User"}!</Text>
-        <Text style={styles.switchModeLink} onPress={handleLogout}>
+        <Spacer height={20} />
+        <Text style={main.introText}>Hello, {User?.name || User?.email || "User"}!</Text>
+        <View style={{paddingHorizontal: 20}}>
+          <Spacer height={30} />
+          <TouchableOpacity
+            style={[
+              main.primaryButton,
+              loading && main.buttonDisabled,
+            ]}
+            onPress={() => {
+              router.push({ pathname: "/GameList" });
+            }}
+          >
+            <Text style={main.primaryButtonText}>
+              {"View Current Games"}
+            </Text>
+          </TouchableOpacity>
+          <Spacer height={10} />
+          <TouchableOpacity
+            style={[
+              main.secondaryButton,
+              loading && main.buttonDisabled,
+            ]}
+            onPress={() => {
+              router.push({ pathname: "/CreateGame" });
+            }}
+          >
+            <Text style={main.secondaryButtonText}>
+              {"Create Game"}
+            </Text>
+          </TouchableOpacity>
+          <Spacer height={10} />
+          <TouchableOpacity
+            style={[
+              main.secondaryButton,
+              loading && main.buttonDisabled,
+            ]}
+            onPress={() => {
+              router.push({ pathname: "/CreateTeam" });
+            }}
+          >
+            <Text style={main.secondaryButtonText}>
+              {"Create Team"}
+            </Text>
+          </TouchableOpacity>
+        </View>
+        <Spacer height={30} />
+        <Text style={main.switchModeLink} onPress={handleLogout}>
                 Log Out
             </Text>
       </SafeAreaView>
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#000000",
-  },
-  containerCentred: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: COLOURS.appBkgColour,
-  },
-  scrollContainer: {
-    flexGrow: 1,
-    justifyContent: "center",
-    paddingHorizontal: 24,
-    paddingVertical: 40,
-  },
-  welcomeSection: {
-    marginBottom: 40,
-    alignItems: "center",
-  },
-  welcomeTitle: {
-    fontSize: 32,
-    fontWeight: "700",
-    color: "#FFFFFF",
-    textAlign: "center",
-    marginBottom: 8,
-    letterSpacing: -0.5,
-  },
-  welcomeSubtitle: {
-    fontSize: 16,
-    color: "rgba(255, 255, 255, 0.8)",
-    textAlign: "center",
-    lineHeight: 22,
-  },
-  cardContainer: {
-    marginBottom: 24,
-    alignItems: "center",
-    justifyContent: "center",
-    width: "100%",
-  },
-  card: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 20,
-    padding: 32,
-    marginHorizontal: 4,
-    ...Platform.select({
-      web: {
-        boxShadow: "0px 8px 20px rgba(0,0,0,0.15)",
-      },
-      default: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.15,
-        shadowRadius: 20,
-        elevation: 10,
-      },
-    }),
-    width: "100%",
-    maxWidth: 400,
-  },
-  formHeader: {
-    marginBottom: 32,
-    alignItems: "center",
-  },
-  formTitle: {
-    fontSize: 24,
-    fontWeight: "600",
-    color: "#ffffff",
-    marginBottom: 8,
-  },
-  titleUnderline: {
-    width: 40,
-    height: 3,
-    backgroundColor: "#ff0000",
-    borderRadius: 2,
-  },
-  inputContainer: {
-    marginBottom: 24,
-  },
-  inputWrapper: {
-    marginBottom: 20,
-  },
-  inputLabel: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#efefef",
-    marginBottom: 8,
-    marginLeft: 4,
-  },
-  input: {
-    borderWidth: 2,
-    borderColor: "#3d3d3d",
-    borderRadius: 12,
-    padding: 16,
-    fontSize: 16,
-    backgroundColor: "#000000",
-    color: "#3d3d3d",
-  },
-  inputFocused: {
-    borderColor: "#7c7c7cff",
-    backgroundColor: "#000000",
-    ...Platform.select({
-      web: {
-        boxShadow: "0px 0px 0px 2px rgba(234, 102, 102, 0.5)",
-      },
-      default: {
-        shadowColor: "#ff0000",
-        shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-        elevation: 4,
-      },
-    }),
-  },
-  primaryButton: {
-    backgroundColor: "#ff0000",
-    borderRadius: 12,
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    alignItems: "center",
-    marginBottom: 16,
-    ...Platform.select({
-      web: {
-        boxShadow: "0px 4px 8px rgba(234, 102, 102, 0.5)",
-      },
-      default: {
-        shadowColor: "#ff0000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-        elevation: 6,
-      },
-    }),
-  },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  primaryButtonText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  secondaryButton: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    alignItems: "center",
-    marginBottom: 16,
-    ...Platform.select({
-      web: {
-        boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)",
-      },
-      default: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-        elevation: 4,
-      },
-    }),
-  },
-  secondaryButtonText: {
-    color: "#ff0000",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  introText: {
-    fontSize: 18,
-    color: "#efefef",
-    textAlign: "center",
-    marginBottom: 16,
-  },
-  switchMode: {
-    alignItems: "center",
-    marginBottom: 24,
-    paddingVertical: 8,
-  },
-  switchModeText: {
-    fontSize: 14,
-    color: "#efefef",
-  },
-  switchModeLink: {
-    color: "#ff0000",
-    fontWeight: "600",
-  },
-  dividerContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 24,
-  },
-  divider: {
-    flex: 1,
-    height: 1,
-    backgroundColor: "#E5E7EB",
-  },
-  orContainer: {
-    backgroundColor: "#FFFFFF",
-    paddingHorizontal: 16,
-  },
-  orText: {
-    fontSize: 12,
-    color: "#efefef",
-    fontWeight: "500",
-  },
-  footer: {
-    alignItems: "center",
-    paddingHorizontal: 16,
-  },
-  footerText: {
-    fontSize: 12,
-    color: "rgba(255, 255, 255, 0.7)",
-    textAlign: "center",
-    lineHeight: 18,
-  },
-  userInfo: {
-    marginBottom: 24,
-    alignItems: "center",
-    justifyContent: "center",
-    width: "100%",
-    height: "100%",
-  },
-  userInfoText: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#1F2937",
-    textAlign: "center",
-  },
-  logoutButton: {
-    backgroundColor: "#ff0000",
-    borderRadius: 12,
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    alignItems: "center",
-    marginBottom: 16,
-    width: "100%",
-    marginTop: 16,
-    ...Platform.select({
-      web: {
-        boxShadow: "0px 4px 8px rgba(234, 102, 102, 0.3)",
-      },
-      default: {
-        shadowColor: "#ff0000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-        elevation: 6,
-      },
-    }),
-    color: "#FFFFFF",
-    fontSize: 16,
-  },
-  logoutButtonText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-});
