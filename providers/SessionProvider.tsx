@@ -65,10 +65,11 @@ const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) 
         await account.createEmailPasswordSession(email, password);
         Alert.alert("Login successful!");
         const user = await account.get();
+        console.log("User data:", user);
         setUser({
             id: user.$id,
-            name: name,
-            email: email
+            name: user.name,
+            email: user.email
         });
         setMode("authenticated");
       }

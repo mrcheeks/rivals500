@@ -27,7 +27,10 @@ export default function Home() {
         <Spacer height={60} />
         <View style={{paddingHorizontal: 20}}>
           <Text style={main.introText}>
-              {"Welcome to Rivals 500, the 500 score tracker. Never lose track of your Rivals."}
+              {"Welcome to Rivals 500"}
+          </Text>
+          <Text style={main.introText}>
+              {"The 500 score tracker.\nNever lose track of your Rivals."}
           </Text>
           <Spacer height={20} />
           <TouchableOpacity
@@ -171,7 +174,12 @@ export default function Home() {
       <SafeAreaView style={main.containerCentred}>
         <Logo />
         <Spacer height={20} />
-        <Text style={main.introText}>Hello, {User?.name || User?.email || "User"}!</Text>
+        {User?.name ? (
+          <Text style={main.introText}>Hello, {User?.name}!</Text>
+        ) : (
+          <Text style={main.introText}>Welcome!</Text>
+        )}
+
         <View style={{paddingHorizontal: 20}}>
           <Spacer height={30} />
           <TouchableOpacity
@@ -194,27 +202,14 @@ export default function Home() {
               loading && main.buttonDisabled,
             ]}
             onPress={() => {
-              router.push({ pathname: "/CreateGame" });
+              router.push({ pathname: "/TeamList" });
             }}
           >
             <Text style={main.secondaryButtonText}>
-              {"Create Game"}
+              {"View Current Teams"}
             </Text>
           </TouchableOpacity>
-          <Spacer height={10} />
-          <TouchableOpacity
-            style={[
-              main.secondaryButton,
-              loading && main.buttonDisabled,
-            ]}
-            onPress={() => {
-              router.push({ pathname: "/CreateTeam" });
-            }}
-          >
-            <Text style={main.secondaryButtonText}>
-              {"Create Team"}
-            </Text>
-          </TouchableOpacity>
+          
         </View>
         <Spacer height={30} />
         <Text style={main.switchModeLink} onPress={handleLogout}>
