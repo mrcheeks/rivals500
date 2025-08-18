@@ -1,18 +1,44 @@
 import Logo from "@/components/Logo";
 import Spacer from "@/components/Spacer";
+import { createTeam } from "@/providers/database/teams";
+import { useSession } from "@/providers/SessionProvider";
 import forms from "@/theme/styles/forms";
 import main from "@/theme/styles/main";
 import { useState } from "react";
 import { KeyboardAvoidingView, Platform, Text, TextInput, TouchableOpacity, View } from "react-native";
 
 export default function CreateTeam() {
+  const { User } = useSession();
   const [teamName, setTeamName] = useState("");
   const [teamMate, setTeamMate] = useState("");
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const createTeam = async (name: string, mate: string) => {
-    console.log("Creating team with name:", name, "and mate:", mate);
+  const handleTeam = async (name: string, mate: string) => {
+    if(!User){
+      alert("You must be logged in to create a team.");
+      return;
+    }
+    if (!name || !mate) {
+      alert("Please fill in all fields.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // Simulate API call
+      const response = await createTeam(name, User.id, mate);
+      console.log("Team created:", response);
+      alert(`Team ${name} with mate ${mate} created successfully!`);
+      // Reset form
+      setTeamName("");
+      setTeamMate("");
+    } catch (error) {
+      console.error("Error creating team:", error);
+      alert("Failed to create team. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -74,7 +100,7 @@ export default function CreateTeam() {
               main.primaryButton,
               loading && main.buttonDisabled,
             ]}
-            onPress={() => createTeam(teamName, teamMate)}
+            onPress={() => handleTeam(teamName, teamMate)}
             disabled={loading}
           >
             <Text style={main.primaryButtonText}>
@@ -86,6 +112,6 @@ export default function CreateTeam() {
 
           
         </View>
-      </KeyboardAvoidingView>
+    </KeyboardAvoidingView>
   );
 }

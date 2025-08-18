@@ -8,4 +8,4 @@ client
     .setPlatform(process.env.EXPO_PUBLIC_APPWRITE_PLATFORM as string);
 
 export const account = new Account(client);
-export const databases = new Databases(client);
+export const databases = new Databases(client); 

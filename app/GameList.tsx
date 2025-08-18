@@ -1,31 +1,38 @@
 import Logo from "@/components/Logo";
 import Spacer from "@/components/Spacer";
-import { databases } from "@/providers/AppwriteProvider";
+import { fetchMyGames } from "@/providers/database/games";
+import { useSession } from "@/providers/SessionProvider";
 import main from "@/theme/styles/main";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { FlatList, SafeAreaView, Text, TouchableOpacity } from "react-native";
-import { ID } from "react-native-appwrite";
 
 const DB_ID = "YOUR_DB_ID";
 const GAME_COLLECTION = "Game500";
 
 export default function GameList() {
+  const { User } = useSession();
   const [games, setGames] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  async function fetchGames() {
-    const res = await databases.listDocuments(DB_ID, GAME_COLLECTION);
-    setGames(res.documents);
-  }
-
-  async function addGame() {
-    await databases.createDocument(DB_ID, GAME_COLLECTION, ID.unique(), {
-      title: "New Game",
-      status: "in_progress",
-    });
-    fetchGames();
+  async function handleFetchGames() {
+    if (!User) {
+      alert("You must be logged in to fetch games.");
+      return;
+    }
+    setLoading(true);
+    try {
+      // Simulate API call
+      const response = await fetchMyGames(User.id);
+      console.log("Fetched games:", response);
+      setGames(response.documents);
+    } catch (error) {
+      console.error("Error fetching games:", error);
+      alert("Failed to fetch games. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   function openGame(gameId: string) {
@@ -33,7 +40,7 @@ export default function GameList() {
   }
 
   useEffect(() => {
-    fetchGames();
+    handleFetchGames();
   }, []);
 
   return (
@@ -48,7 +55,7 @@ export default function GameList() {
             keyExtractor={(item) => item.$id}
             renderItem={({ item }) => (
             <TouchableOpacity onPress={() => openGame(`/${item.$id}`)}>
-                <Text style={{ padding: 10, fontSize: 18 }}>{item.title}</Text>
+                <Text style={{ padding: 10, fontSize: 18, color: "#ffffff" }}>{item.title}</Text>
             </TouchableOpacity>
             )}
         />
