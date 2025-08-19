@@ -32,7 +32,11 @@ export default function RootLayout() {
           headerBackTitle: "Back",
           headerTintColor: "white",
         }} />
-        <Stack.Screen name="GameDetails" options={{ headerShown: false }} />
+        <Stack.Screen name="GameDetails" options={{
+          title: "Game Details",
+          headerBackTitle: "Back",
+          headerTintColor: "white",
+        }} />
         <Stack.Screen name="CreateTeam" options={{
           title: "Create Team",
           headerBackTitle: "Back",
