@@ -14,6 +14,7 @@ export const createGame = async (title: string, owner_id: string, opponent_id: s
                 "title": title,
                 "team_1_id": owner_id,
                 "team_2_id": opponent_id,
+                "player": owner_id
             }
         );
         return response;

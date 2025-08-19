@@ -8,7 +8,7 @@ import { useState } from "react";
 import { KeyboardAvoidingView, Platform, Text, TextInput, TouchableOpacity, View } from "react-native";
 
 export default function CreateTeam() {
-  const { User } = useSession();
+  const { User, reloadPlayer } = useSession();
   const [teamName, setTeamName] = useState("");
   const [teamMate, setTeamMate] = useState("");
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
@@ -33,6 +33,7 @@ export default function CreateTeam() {
       // Reset form
       setTeamName("");
       setTeamMate("");
+      reloadPlayer();
     } catch (error) {
       console.error("Error creating team:", error);
       alert("Failed to create team. Please try again.");

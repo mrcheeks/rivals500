@@ -8,7 +8,7 @@ import { useState } from "react";
 import { KeyboardAvoidingView, Platform, Text, TextInput, TouchableOpacity, View } from "react-native";
 
 export default function CreateGame() {
-  const { User } = useSession();
+  const { User, reloadPlayer} = useSession();
   const [gameName, setGameName] = useState("");
   const [opponent, setOpponent] = useState("");
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
@@ -33,6 +33,7 @@ export default function CreateGame() {
         // Reset form
         setGameName("");
         setOpponent("");
+        reloadPlayer();
       } catch (error) {
         console.error("Error creating game:", error);
         alert("Failed to create game. Please try again.");
@@ -58,7 +59,7 @@ export default function CreateGame() {
           <View style={forms.inputContainer}>
             
               <View style={forms.inputWrapper}>
-                <Text style={forms.inputLabel}>Team Name</Text>
+                <Text style={forms.inputLabel}>Game Name</Text>
                 <TextInput
                   style={[
                     forms.input,

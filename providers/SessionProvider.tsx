@@ -2,12 +2,38 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Alert, AppState } from 'react-native';
 import { Account, AppwriteException, Client, ID } from 'react-native-appwrite';
+import { createPlayer, fetchPlayer } from './database/player';
 
+type Team = {
+  $id: string;
+  name: string;
+  player_2: string;
+};
+
+type Contract = {
+  $id: string;
+  suit: 'hearts' | 'diamonds' | 'spades' | 'clubs' | 'no-trumps';
+  count: '6' | '7' | '8' | '9' | '10';
+  outcome: 'in_progress' | 'won' | 'lost';
+};
+
+type Game = {
+  $id: string;
+  team_1_id: string;
+  team_2_id: string;
+  title: string;
+  team_1_doors: number;
+  team_2_doors: number;
+  status: 'in_progress' | 'complete';
+  contracts: Contract[]
+};
 
 type User = {
-    id: string;
-    name: string;
-    email: string;
+  id: string;
+  name: string;
+  email: string;
+  teams: Team[];
+  games: Game[];
 };
 
 // Define the session context
@@ -20,6 +46,7 @@ interface SessionContextType {
     handleAuth: (email: string, password: string, name: string) => Promise<void>;
     // Add other methods as needed, e.g., signOut
     handleLogout: () => void;
+    reloadPlayer: () => Promise<void>;
 }
 
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
@@ -58,20 +85,45 @@ const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) 
     }
     try {
       if (mode === "signup") {
-        await account.create(ID.unique(), email, password, name);
-        Alert.alert("Signup successful! Please login.");
-        setMode("login");
+        const user = await account.create(ID.unique(), email, password, name);
+        if (user) {
+          await account.createEmailPasswordSession(email, password);
+          console.log("Auth created:", user);
+          try {
+            const response = await createPlayer(user.$id, name);
+            console.log("Player created:", response);
+            setMode("authenticated");
+          } catch (error) {
+            console.error("Error creating player:", error);
+            Alert.alert("Failed to create player");
+          }
+        } else {
+          Alert.alert("Signup failed");
+        }
       } else {
         await account.createEmailPasswordSession(email, password);
+        
         Alert.alert("Login successful!");
         const user = await account.get();
-        console.log("User data:", user);
-        setUser({
-            id: user.$id,
-            name: user.name,
-            email: user.email
-        });
-        setMode("authenticated");
+        if (user) {
+          console.log("Auth data:", user);
+          try {
+            const player = await fetchPlayer(user.$id);
+            console.log("Player fetched:", player);
+            setUser({
+                id: player.$id,
+                name: user.name,
+                email: user.email,
+                teams: player.teams || [],
+                games: player.games || [],
+            });
+            setMode("authenticated");
+          } catch (error) {
+            console.error("Error fetching player:", error);
+          }
+        } else {
+          console.error("User not found");
+        }
       }
     } catch (err) {
       if (err instanceof AppwriteException) {
@@ -91,16 +143,52 @@ const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) 
     setMode("pending");
   };
 
+  const reloadPlayer = async () => {
+    const user = await account.get();
+    if (user) {
+      console.log("Auth data:", user);
+      try {
+        const player = await fetchPlayer(user.$id);
+        console.log("Player fetched:", player);
+        setUser({
+            id: player.$id,
+            name: user.name,
+            email: user.email,
+            teams: player.teams || [],
+            games: player.games || [],
+        });
+        setMode("authenticated");
+      } catch (error) {
+        console.error("Error fetching player:", error);
+      }
+    } else {
+      console.error("User not found");
+    }
+  };
+
   useEffect(() => {
     const fetchUser = async () => {
       try {
         const user = await account.get();
-        setUser({
-            id: user.$id,
-            name: user.name,
-            email: user.email
-        });
-        setMode("authenticated");
+        if (user) {
+          console.log("Auth data:", user);
+          try {
+            const player = await fetchPlayer(user.$id);
+            console.log("Player fetched:", player);
+            setUser({
+                id: player.$id,
+                name: user.name,
+                email: user.email,
+                teams: player.teams || [],
+                games: player.games || [],
+            });
+            setMode("authenticated");
+          } catch (error) {
+            console.error("Error fetching player:", error);
+          } 
+        } else {
+          console.error("User not found");
+        }
       } catch (err) {
         console.log("Error fetching user", err);
         setUser(null);
@@ -116,10 +204,14 @@ const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) 
       if (nextAppState === "active") {
         try {
           const user = await account.get();
+          const player = await fetchPlayer(user.$id);
+          console.log("Player data:", player);
           setUser({
-            id: user.$id,
-            name: user.name,
-            email: user.email
+              id: player.$id,
+              name: user.name,
+              email: user.email,
+              teams: player.teams || [],
+              games: player.games || [],
           });
           setMode("authenticated");
         } catch (err) {
@@ -135,7 +227,7 @@ const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) 
 
 
     return (
-        <SessionContext.Provider value={{ User, mode, loading, checkingUser, setMode, handleAuth, handleLogout }}>
+        <SessionContext.Provider value={{ User, mode, loading, checkingUser, setMode, handleAuth, handleLogout, reloadPlayer }}>
         {children}
         </SessionContext.Provider>
     );

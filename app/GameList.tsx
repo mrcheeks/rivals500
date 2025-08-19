@@ -1,10 +1,9 @@
 import Logo from "@/components/Logo";
 import Spacer from "@/components/Spacer";
-import { fetchMyGames } from "@/providers/database/games";
 import { useSession } from "@/providers/SessionProvider";
 import main from "@/theme/styles/main";
 import { useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { FlatList, SafeAreaView, Text, TouchableOpacity } from "react-native";
 
 const DB_ID = "YOUR_DB_ID";
@@ -12,46 +11,24 @@ const GAME_COLLECTION = "Game500";
 
 export default function GameList() {
   const { User } = useSession();
-  const [games, setGames] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-
-  async function handleFetchGames() {
-    if (!User) {
-      alert("You must be logged in to fetch games.");
-      return;
-    }
-    setLoading(true);
-    try {
-      // Simulate API call
-      const response = await fetchMyGames(User.id);
-      console.log("Fetched games:", response);
-      setGames(response.documents);
-    } catch (error) {
-      console.error("Error fetching games:", error);
-      alert("Failed to fetch games. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  }
 
   function openGame(gameId: string) {
     
   }
 
-  useEffect(() => {
-    handleFetchGames();
-  }, []);
+  
 
   return (
     <SafeAreaView style={main.containerCentred}>
         <Logo />
         <Spacer height={60} />
-        {games.length === 0 ? (
+        {User?.games.length === 0 ? (
         <Text style={main.pTextCenter}>No games found</Text>
         ) : (
         <FlatList
-            data={games}
+            data={User?.games}
             keyExtractor={(item) => item.$id}
             renderItem={({ item }) => (
             <TouchableOpacity onPress={() => openGame(`/${item.$id}`)}>
