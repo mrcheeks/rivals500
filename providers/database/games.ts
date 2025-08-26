@@ -1,7 +1,7 @@
 import { ID, Query } from "react-native-appwrite";
 import { databases } from "../AppwriteProvider";
 
-export const createGame = async (title: string, owner_id: string, opponent_id: string) => {
+export const createGame = async (title: string, owner_id: string, team_id: string, opponent_id: string, non_player_team: boolean) => {
     const db = process.env.EXPO_PUBLIC_DATABASE_ID as string;
     const collection = process.env.EXPO_PUBLIC_GAMES_COLLECTION_ID as string;
     console.log(db, collection);
@@ -12,9 +12,10 @@ export const createGame = async (title: string, owner_id: string, opponent_id: s
             ID.unique(),
             {
                 "title": title,
-                "team_1_id": owner_id,
+                "team_1_id": team_id,
                 "team_2_id": opponent_id,
-                "player": owner_id
+                "player": owner_id,
+                "non_player_team_2": non_player_team
             }
         );
         return response;

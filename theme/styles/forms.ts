@@ -56,6 +56,29 @@ const forms = ScaledSheet.create({
         },
       }),
     },
+    dropdown:{
+      backgroundColor: '#000',
+      borderWidth: 2,
+      borderColor: "#3d3d3d",
+      borderRadius: 12,
+    },
+    
+    dropdownText: {
+      color: "#000",
+      fontSize: 16,
+    },
+    dropdownLabel: {
+      color: "#FFF",
+      fontSize: 16,
+      paddingVertical: 12,
+      paddingHorizontal: 10,
+    },
+    dropdownPlaceholder: {
+      color: "#9CA3AF",
+      fontSize: 16,
+      paddingVertical: 12,
+      paddingHorizontal: 10,
+    },
 });
 
 export default forms;

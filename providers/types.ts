@@ -10,9 +10,11 @@ type Team = {
 
 type Contract = {
   $id: string;
-  suit: 'hearts' | 'diamonds' | 'spades' | 'clubs' | 'no-trumps';
+  suit: 'hearts' | 'diamonds' | 'spades' | 'clubs' | 'no_trumps';
   count: '6' | '7' | '8' | '9' | '10';
   outcome: 'in_progress' | 'won' | 'lost';
+  game_id: string;
+  team: 'team_1' | 'team_2';
 };
 
 type Game = {
@@ -22,7 +24,10 @@ type Game = {
   title: string;
   team_1_doors: number;
   team_2_doors: number;
-  status: 'in_progress' | 'complete';
+  team_1_score: number;
+  team_2_score: number;
+  non_player_team_2: boolean;
+  status: 'in_progress' | 'active' | 'complete';
   contracts: Contract[]
 };
 

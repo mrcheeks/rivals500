@@ -4,22 +4,27 @@ import { createGame } from "@/providers/database/games";
 import { useSession } from "@/providers/SessionProvider";
 import forms from "@/theme/styles/forms";
 import main from "@/theme/styles/main";
-import { useState } from "react";
-import { KeyboardAvoidingView, Platform, Text, TextInput, TouchableOpacity, View } from "react-native";
+import React, { useEffect, useState } from "react";
+import { KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import DropDownPicker from 'react-native-dropdown-picker';
 
 export default function CreateGame() {
   const { User, reloadPlayer} = useSession();
   const [gameName, setGameName] = useState("");
+  const [myteam, setMyTeam] = useState("");
   const [opponent, setOpponent] = useState("");
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [teamValue, setTeamValue] = useState(null);
+  const [teams, setTeams] = useState<{ label: string; value: string }[]>([]);
 
-  const handleGame = async (name: string, opponent: string) => {
+  const handleGame = async (name: string, myteam: string, opponent: string) => {
       if(!User){
         alert("You must be logged in to create a game.");
         return;
       }
-      if (!gameName || !opponent) {
+      if (!gameName || !teamValue || !opponent) {
         alert("Please fill in all fields.");
         return;
       }
@@ -27,7 +32,7 @@ export default function CreateGame() {
       setLoading(true);
       try {
         // Simulate API call
-        const response = await createGame(gameName, User.id, opponent);
+        const response = await createGame(gameName, User.id, teamValue, opponent, true);
         console.log("Game created:", response);
         alert(`Game: ${gameName} with opponent ${opponent} created successfully!`);
         // Reset form
@@ -40,10 +45,20 @@ export default function CreateGame() {
       } finally {
         setLoading(false);
       }
+  }
+
+  useEffect(() => {
+    if (User && User.teams) {
+      const teamOptions = User.teams.map((team: any) => ({
+        label: team.name,
+        value: team.$id,
+      }));
+      setTeams(teamOptions);
     }
+  }, [User])
   
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={main.containerCentred}>
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={[main.containerCentred,{paddingHorizontal: 16}]}>
         <Logo />
         <Spacer height={40} />
         <View>
@@ -75,6 +90,24 @@ export default function CreateGame() {
                 onBlur={() => setFocusedInput(null)}
               />
             </View>
+
+            <View style={forms.inputWrapper}>
+              <Text style={forms.inputLabel}>My Team</Text>
+              <DropDownPicker
+                open={open}
+                value={teamValue}
+                items={teams}
+                setOpen={setOpen}
+                setValue={setTeamValue}
+                setItems={setTeams}
+                placeholder="Select a team"
+                placeholderStyle={forms.dropdownPlaceholder}
+                listMode="SCROLLVIEW"
+                style={forms.dropdown}
+                textStyle={forms.dropdownText}
+                labelStyle={forms.dropdownLabel}
+              />
+            </View>
             
             <View style={forms.inputWrapper}>
               <Text style={forms.inputLabel}>Opponent</Text>
@@ -101,7 +134,7 @@ export default function CreateGame() {
               main.primaryButton,
               loading && main.buttonDisabled,
             ]}
-            onPress={() => handleGame(gameName, opponent)}
+            onPress={() => handleGame(gameName, myteam,opponent)}
             disabled={loading}
           >
             <Text style={main.primaryButtonText}>
@@ -116,3 +149,11 @@ export default function CreateGame() {
     </KeyboardAvoidingView>
   );
 }
+const styles = StyleSheet.create({
+    dropdown: {
+      backgroundColor: '#000',
+      borderWidth: 2,
+      borderColor: "#3d3d3d",
+      borderRadius: 12,
+    },
+  });

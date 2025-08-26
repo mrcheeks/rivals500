@@ -32,10 +32,31 @@ const main = ScaledSheet.create({
     letterSpacing: -0.5,
   },
   welcomeSubtitle: {
-    fontSize: 16,
-    color: "rgba(255, 255, 255, 0.8)",
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#FFFFFF",
     textAlign: "center",
-    lineHeight: 22,
+    marginBottom: 8,
+    letterSpacing: -0.5,
+  },
+  score: {
+    fontSize: 32,
+    fontWeight: "700",
+    color: "#FFFFFF",
+    textAlign: "center",
+    marginBottom: 8,
+    letterSpacing: -0.5,
+  },
+  teamContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    width: "80%",
+    borderColor: "#E5E7EB",
+    borderWidth: 4,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
   },
   cardContainer: {
     marginBottom: 24,
@@ -63,7 +84,7 @@ const main = ScaledSheet.create({
     width: "100%",
   },
   primaryButton: {
-    backgroundColor: "#ff0000",
+    backgroundColor: "#FF4848",
     borderRadius: 12,
     paddingVertical: 16,
     paddingHorizontal: 24,
@@ -74,7 +95,7 @@ const main = ScaledSheet.create({
         boxShadow: "0px 4px 8px rgba(234, 102, 102, 0.5)",
       },
       default: {
-        shadowColor: "#ff0000",
+        shadowColor: "#FF4848",
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 8,
@@ -111,7 +132,32 @@ const main = ScaledSheet.create({
     }),
   },
   secondaryButtonText: {
-    color: "#ff0000",
+    color: "#FF4848",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  bidButton: {
+    backgroundColor: "#289835",
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    alignItems: "center",
+    marginBottom: 0,
+    ...Platform.select({
+      web: {
+        boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)",
+      },
+      default: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+        elevation: 4,
+      },
+    }),
+  },
+  bidButtonText: {
+    color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "600",
   },
@@ -137,7 +183,7 @@ const main = ScaledSheet.create({
     color: "#efefef",
   },
   switchModeLink: {
-    color: "#ff0000",
+    color: "#FF4848",
     fontWeight: "600",
   },
   dividerContainer: {
@@ -183,7 +229,7 @@ const main = ScaledSheet.create({
     textAlign: "center",
   },
   logoutButton: {
-    backgroundColor: "#ff0000",
+    backgroundColor: "#FF4848",
     borderRadius: 12,
     paddingVertical: 16,
     paddingHorizontal: 24,
@@ -196,7 +242,7 @@ const main = ScaledSheet.create({
         boxShadow: "0px 4px 8px rgba(234, 102, 102, 0.3)",
       },
       default: {
-        shadowColor: "#ff0000",
+        shadowColor: "#FF4848",
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 8,

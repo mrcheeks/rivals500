@@ -1,27 +1,154 @@
+import BidModal from "@/components/BidModal";
+import { createContract, getContractsByGameId, updateContract } from "@/providers/database/contracts";
 import { useSession } from "@/providers/SessionProvider";
 import { Game, Team } from "@/providers/types";
 import main from "@/theme/styles/main";
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
-import { SafeAreaView, Text, TouchableOpacity, View } from "react-native";
+import { FlatList, SafeAreaView, Text, TouchableOpacity, View } from "react-native";
 
 interface GameDetailsProps {
   params: { gameId: string };
 }
 
+type Bid = {
+  count: '6' | '7' | '8' | '9' | '10';
+  suit: 'hearts' | 'diamonds' | 'spades' | 'clubs' | 'no_trumps';
+  team: 'team_1' | 'team_2';
+};
+
 export default function GameDetails({ params }: GameDetailsProps) {
+  const [loading, setLoading] = useState(false);
   const { gameId } = useLocalSearchParams();
   const { User, reloadPlayer } = useSession();
   const [gameData, setGameData] = useState<Game | null>(null);
   const [team1Data, setTeam1Data] = useState<Team | null>(null);
-  const [team2Data, setTeam2Data] = useState<String>('');
-  const suits = ['spades','clubs','diamonds','hearts','no-trumps'] as const;
-  const tricks = ['6', '7', '8', '9', '10'] as const;
+  const [team2Data, setTeam2Data] = useState<string>('');
+  const [modalVisible, setModalVisible] = useState(false);
+  const [contractSet, setContractSet] = useState(false);
+  const [contractData, setContractData] = useState<any | null>(null);
+  const [loadedContracts, setLoadedContracts] = useState<any[]>([]);
+  const [contractOutcome, setContractOutcome] = useState<string>('');
+  const [selectedTeam, setSelectedTeam] = useState<'team_1' | 'team_2'>('team_1');
 
-  type Suit = typeof suits[number];
-  type Trick = typeof tricks[number];
+  const handleContract = (bid: Bid) => {
+    if (!gameData) return;
+    setContractSet(true);
+    setModalVisible(false);
+    createBid({
+      count: bid.count,
+      suit: bid.suit,
+      team: bid.team,
+      outcome: 'in_progress',
+      game_id: gameData.$id
+    });
+  };
 
-  const [selected, setSelected] = useState<{ suit: Suit; trick: Trick } | null>(null);
+  const handleOutcome = (outcome: string) => {
+    setContractOutcome(outcome);
+    if (contractData && gameData) {
+      setContractData(null);
+      updateBid({
+        $id: contractData.$id,
+        count: contractData.count,
+        suit: contractData.suit,
+        team: contractData.team,
+        outcome: outcome,
+        game_id: gameData.$id
+      });
+      setContractSet(false);
+      // After updating, reload contracts to refresh FlatList data
+    }
+    
+  };
+
+  const updateBid = async (data: any) => {
+    if (!gameData || !data) return;
+    setLoading(true);
+    try {
+      const contract = await updateContract(data);
+      console.log("Contract updated:", contract);
+      loadContracts(gameData.$id);
+    } catch (error) {
+      console.error("Error updating contract:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const createBid = async (data: any) => {
+    if (!gameData || !data) return;
+    setLoading(true);
+    try {
+      const contract = await createContract(data);
+      console.log("Contract created:", contract);
+      setContractData({
+      $id: contract.$id,
+      count: contract.count,
+      suit: contract.suit,
+      team: contract.team,
+      outcome: 'in_progress',
+      game_id: gameData.$id
+    });
+    } catch (error) {
+      console.error("Error creating contract:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadContracts = async (gameId: string) => {
+    if (!gameId) return;
+    setLoadedContracts([]);
+    setLoading(true);
+    try {
+      const contracts = await getContractsByGameId(gameId);
+      console.log("Contracts loaded");
+      // Map or cast DefaultDocument[] to Contract[]
+      setLoadedContracts(
+        contracts.map((doc: any) => ({
+          $id: doc.$id,
+          suit: doc.suit,
+          count: doc.count,
+          outcome: doc.outcome,
+          game_id: doc.game_id,
+          team: doc.team,
+        }))
+      );
+    } catch (error) {
+      console.error("Error loading contracts:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const checkContracts = () => {
+    const inProgressContract = loadedContracts.find(contract => contract.outcome === 'in_progress');
+    if (inProgressContract) {
+      setContractData(inProgressContract);
+      setContractOutcome(inProgressContract.outcome);
+      setContractSet(true);
+      setSelectedTeam(inProgressContract.team);
+    }
+    const otherContracts = loadedContracts.filter(
+      contract => contract.outcome !== 'in_progress'
+    );
+  };
+
+  const openBidModal = (team: 'team_1' | 'team_2') => {
+    setSelectedTeam(team);
+    setModalVisible(true);
+  };
+
+  const getTeamName = (team: string) => {
+    if (team === "team_1") {
+      return team1Data?.name || '';
+    } else if (team === "team_2") {
+      return team2Data || '';
+    }
+    return '';
+  };
 
   useEffect(() => {
     const currentGame = User?.games.find(game => game.$id === gameId) || null;
@@ -37,95 +164,109 @@ export default function GameDetails({ params }: GameDetailsProps) {
       } else {
         setTeam1Data(currentTeam1);
         setTeam2Data(currentTeam2);
+        loadContracts(currentGame.$id)
       }
     }
   }, [gameId])
 
+  useEffect(() => {
+    if (!loadedContracts) return;
+    checkContracts();
+  }, [loadedContracts])
+
   return (
     <SafeAreaView style={main.containerCentred}>
-      {gameData && (
+      <>
+      {gameData && !modalVisible && (
         <>
-          <Text style={main.welcomeTitle}>{gameData.title}</Text>
-          <Text style={main.pTextCenter}>{team1Data?.name}</Text>
-          <Text style={main.pTextCenter}>{gameData.team_1_doors}</Text>
-          <Text style={main.pTextCenter}>{team2Data}</Text>
-          <Text style={main.pTextCenter}>{gameData.team_2_doors}</Text>
-          {/* Suits row */}
-          <View style={{ flexDirection: "row", justifyContent: "center", marginTop: 24, marginBottom: 12 }}>
-            {suits.map((suit) => (
-              <View
-                key={suit}
-                style={{
-                  flex: 1,
-                  alignItems: "center",
-                  maxWidth: 60,
-                  minWidth: 0,
-                  backgroundColor: "#fff",
-                  borderRadius: 8,
-                  marginHorizontal: 2,
-                  paddingVertical: 4,
-                }}
-              >
-                {suit === "no-trumps" ? (
-                  <Text style={{ fontSize: 24, color: "#FFD700", textAlign: "center" }}>★</Text>
-                ) : (
-                  <Text
-                    style={{
-                      fontSize: 24,
-                      color:
-                        suit === "hearts" || suit === "diamonds"
-                          ? "#D32F2F"
-                          : "#222",
-                      textAlign: "center",
-                    }}
-                  >
-                    {suit === "hearts" && "♥"}
-                    {suit === "diamonds" && "♦"}
-                    {suit === "spades" && "♠"}
-                    {suit === "clubs" && "♣"}
-                  </Text>
-                )}
+          {gameData && !contractSet && (
+            <>
+              <Text style={[main.welcomeTitle, { marginBottom: 32 }]}>{gameData.title}</Text>
+              <View style={main.teamContainer}>
+              <View>
+                <Text style={main.welcomeSubtitle}>{team1Data?.name}</Text>
+                <TouchableOpacity style={main.bidButton} onPress={() => openBidModal('team_1')}>
+                <Text style={main.bidButtonText}>Place Bid</Text>
+                </TouchableOpacity>
               </View>
-            ))}
-          </View>
-          {/* Trick buttons grid */}
-          <View>
-            {tricks.map((trick) => (
-              <View key={trick} style={{ flexDirection: "row", justifyContent: "center", marginBottom: 8 }}>
-                {suits.map((suit) => {
-                  const isSelected = selected?.suit === suit && selected?.trick === trick;
-                  return (
-                    <TouchableOpacity
-                      key={suit}
-                      style={{
-                        flex: 1,
-                        maxWidth: 60,
-                        minWidth: 60,
-                        backgroundColor: isSelected ? "#1976d2" : "#fff",
-                        borderColor: "#1976d2",
-                        borderWidth: 1,
-                        borderRadius: 8,
-                        marginHorizontal: 2,
-                        paddingVertical: 12,
-                        alignItems: "center",
-                        justifyContent: "center",
-                        elevation: isSelected ? 2 : 0,
-                      }}
-                      onPress={() => setSelected({ suit, trick })}
-                      accessibilityLabel={`${trick} of ${suit}`}
-                      accessibilityState={{ selected: isSelected }}
-                    >
-                      <Text style={{ color: isSelected ? "#fff" : "#1976d2", fontWeight: "bold", fontSize: 16 }}>
-                        {trick}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
+              <Text style={main.score}>{gameData.team_1_doors}-{gameData.team_1_score}</Text>
               </View>
-            ))}
-          </View>
+              <View style={main.teamContainer}>
+              <View>
+                <Text style={main.welcomeSubtitle}>{team2Data}</Text>
+                <TouchableOpacity style={main.bidButton} onPress={() => openBidModal('team_2')}>
+                <Text style={main.bidButtonText}>Place Bid</Text>
+                </TouchableOpacity>
+              </View>
+              <Text style={main.score}>{gameData.team_2_doors}-{gameData.team_2_score}</Text>
+              </View>
+              <FlatList
+              data={[...loadedContracts].reverse()}
+              renderItem={({ item }) => (
+                <View>
+                <Text style={main.pTextCenter}>{getTeamName(item.team)} {item.outcome} {item.count} {item.suit}</Text>
+                </View>
+              )}
+              keyExtractor={item => item.$id}
+              />
+            </>
+          )}
+
+          {gameData && contractSet && (
+            <>
+              <Text style={[main.welcomeTitle, { marginBottom: 32 }]}>{gameData.title}</Text>
+              <View style={main.teamContainer}>
+                <View>
+                  <Text style={main.welcomeSubtitle}>{team1Data?.name}</Text>
+                  {selectedTeam === 'team_1' && (
+                    <>
+                      <Text style={main.pTextCenter}>Bid: {contractData?.count} {contractData?.suit}</Text>
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
+                        <TouchableOpacity onPress={() => handleOutcome('lost')} >
+                          <MaterialIcons name="close" size={48} color="#FF4848" />
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => handleOutcome('won')} >
+                          <MaterialIcons name="check-circle" size={48} color="#289835" />
+                        </TouchableOpacity>
+                      </View>
+                    </>
+                  )} 
+                  
+                </View>
+                <Text style={main.score}>{gameData.team_1_doors}-{gameData.team_1_score}</Text>
+              </View>
+              <View style={main.teamContainer}>
+                <View>
+                  <Text style={main.welcomeSubtitle}>{team2Data}</Text>
+                  {selectedTeam === 'team_2' && (
+                    <>
+                      <Text style={main.pTextCenter}>Bid: {contractData?.count} {contractData?.suit}</Text>
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
+                        <TouchableOpacity onPress={() => handleOutcome('lost')} >
+                          <MaterialIcons name="close" size={48} color="#FF4848" />
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => handleOutcome('won')} >
+                          <MaterialIcons name="check-circle" size={48} color="#289835" />
+                        </TouchableOpacity>
+                      </View>
+                    </>
+                  )}
+                  
+                </View>
+                <Text style={main.score}>{gameData.team_2_doors}-{gameData.team_2_score}</Text>
+              </View>
+            </>
+          )}
+
         </>
       )}
+      
+      {modalVisible && (
+            <BidModal onClose={() => setModalVisible(false)} handleBid={handleContract} team={selectedTeam} teamname={getTeamName(selectedTeam)} />
+          )}
+      </>
+
     </SafeAreaView>
   );
 }
+
