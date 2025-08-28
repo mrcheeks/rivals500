@@ -2,6 +2,7 @@ import BidModal from "@/components/BidModal";
 import { createContract, getContractsByGameId, updateContract } from "@/providers/database/contracts";
 import { useSession } from "@/providers/SessionProvider";
 import { Game, Team } from "@/providers/types";
+import { createGameState, updateScore } from "@/scripts/gameState";
 import main from "@/theme/styles/main";
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useLocalSearchParams } from "expo-router";
@@ -10,6 +11,11 @@ import { FlatList, SafeAreaView, Text, TouchableOpacity, View } from "react-nati
 
 interface GameDetailsProps {
   params: { gameId: string };
+}
+
+interface TeamState {
+  roundScore: number; // current round tally
+  wins: number;       // number of matches won
 }
 
 type Bid = {
@@ -25,12 +31,15 @@ export default function GameDetails({ params }: GameDetailsProps) {
   const [gameData, setGameData] = useState<Game | null>(null);
   const [team1Data, setTeam1Data] = useState<Team | null>(null);
   const [team2Data, setTeam2Data] = useState<string>('');
+  const [team1Score, setTeam1Score] = useState<TeamState>({ roundScore: 0, wins: 0 });
+  const [team2Score, setTeam2Score] = useState<TeamState>({ roundScore: 0, wins: 0 });
   const [modalVisible, setModalVisible] = useState(false);
   const [contractSet, setContractSet] = useState(false);
   const [contractData, setContractData] = useState<any | null>(null);
   const [loadedContracts, setLoadedContracts] = useState<any[]>([]);
   const [contractOutcome, setContractOutcome] = useState<string>('');
   const [selectedTeam, setSelectedTeam] = useState<'team_1' | 'team_2'>('team_1');
+  const gameTally = createGameState();
 
   const handleContract = (bid: Bid) => {
     if (!gameData) return;
@@ -45,7 +54,7 @@ export default function GameDetails({ params }: GameDetailsProps) {
     });
   };
 
-  const handleOutcome = (outcome: string) => {
+  const handleOutcome = (outcome: string, allTen: boolean) => {
     setContractOutcome(outcome);
     if (contractData && gameData) {
       setContractData(null);
@@ -55,7 +64,8 @@ export default function GameDetails({ params }: GameDetailsProps) {
         suit: contractData.suit,
         team: contractData.team,
         outcome: outcome,
-        game_id: gameData.$id
+        game_id: gameData.$id,
+        all_ten: allTen
       });
       setContractSet(false);
       // After updating, reload contracts to refresh FlatList data
@@ -114,6 +124,7 @@ export default function GameDetails({ params }: GameDetailsProps) {
           outcome: doc.outcome,
           game_id: doc.game_id,
           team: doc.team,
+          all_ten: doc.all_ten
         }))
       );
     } catch (error) {
@@ -134,6 +145,24 @@ export default function GameDetails({ params }: GameDetailsProps) {
     const otherContracts = loadedContracts.filter(
       contract => contract.outcome !== 'in_progress'
     );
+  };
+
+  const tallyScore = () => {
+    if (!gameData) return;
+
+    // For each loaded contract, use updateScore to update the game state
+    loadedContracts.forEach(contract => {
+      const { count, suit, outcome, team } = contract;
+      if (outcome === 'won' || outcome === 'lost') {
+      // If outcome is 'won', tricksMade = count, else tricksMade = 0
+      const tricksMade = contract.all_ten ? 10 : (outcome === 'won' ? Number(count) : 0);
+      console.log(gameTally, team, Number(count), suit, tricksMade);
+      updateScore(gameTally, team, Number(count), suit, tricksMade);
+      }
+    });
+    setTeam1Score({ roundScore: gameTally.team_1.roundScore, wins: gameTally.team_1.wins });
+    setTeam2Score({ roundScore: gameTally.team_2.roundScore, wins: gameTally.team_2.wins });
+    console.log("Tally complete:", gameTally);
   };
 
   const openBidModal = (team: 'team_1' | 'team_2') => {
@@ -172,6 +201,7 @@ export default function GameDetails({ params }: GameDetailsProps) {
   useEffect(() => {
     if (!loadedContracts) return;
     checkContracts();
+    tallyScore();
   }, [loadedContracts])
 
   return (
@@ -181,7 +211,7 @@ export default function GameDetails({ params }: GameDetailsProps) {
         <>
           {gameData && !contractSet && (
             <>
-              <Text style={[main.welcomeTitle, { marginBottom: 32 }]}>{gameData.title}</Text>
+              <Text style={[main.welcomeSubtitle, { marginBottom: 32, marginTop: 32 }]}>{gameData.title}</Text>
               <View style={main.teamContainer}>
               <View>
                 <Text style={main.welcomeSubtitle}>{team1Data?.name}</Text>
@@ -189,7 +219,7 @@ export default function GameDetails({ params }: GameDetailsProps) {
                 <Text style={main.bidButtonText}>Place Bid</Text>
                 </TouchableOpacity>
               </View>
-              <Text style={main.score}>{gameData.team_1_doors}-{gameData.team_1_score}</Text>
+              <Text style={main.welcomeSubtitle}>{team1Score?.wins}|{team1Score?.roundScore}</Text>
               </View>
               <View style={main.teamContainer}>
               <View>
@@ -198,7 +228,7 @@ export default function GameDetails({ params }: GameDetailsProps) {
                 <Text style={main.bidButtonText}>Place Bid</Text>
                 </TouchableOpacity>
               </View>
-              <Text style={main.score}>{gameData.team_2_doors}-{gameData.team_2_score}</Text>
+              <Text style={main.welcomeSubtitle}>{team2Score?.wins}|{team2Score?.roundScore}</Text>
               </View>
               <FlatList
               data={[...loadedContracts].reverse()}
@@ -222,11 +252,14 @@ export default function GameDetails({ params }: GameDetailsProps) {
                     <>
                       <Text style={main.pTextCenter}>Bid: {contractData?.count} {contractData?.suit}</Text>
                       <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
-                        <TouchableOpacity onPress={() => handleOutcome('lost')} >
+                        <TouchableOpacity onPress={() => handleOutcome('lost', false)} >
                           <MaterialIcons name="close" size={48} color="#FF4848" />
                         </TouchableOpacity>
-                        <TouchableOpacity onPress={() => handleOutcome('won')} >
+                        <TouchableOpacity onPress={() => handleOutcome('won', false)} >
                           <MaterialIcons name="check-circle" size={48} color="#289835" />
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => handleOutcome('won', true)} >
+                          <MaterialIcons name="check-circle" size={48} color="#ce9211ff" />
                         </TouchableOpacity>
                       </View>
                     </>
@@ -242,11 +275,14 @@ export default function GameDetails({ params }: GameDetailsProps) {
                     <>
                       <Text style={main.pTextCenter}>Bid: {contractData?.count} {contractData?.suit}</Text>
                       <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
-                        <TouchableOpacity onPress={() => handleOutcome('lost')} >
+                        <TouchableOpacity onPress={() => handleOutcome('lost', false)} >
                           <MaterialIcons name="close" size={48} color="#FF4848" />
                         </TouchableOpacity>
-                        <TouchableOpacity onPress={() => handleOutcome('won')} >
+                        <TouchableOpacity onPress={() => handleOutcome('won', false)} >
                           <MaterialIcons name="check-circle" size={48} color="#289835" />
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => handleOutcome('won', true)} >
+                          <MaterialIcons name="check-circle" size={48} color="#ce9211ff" />
                         </TouchableOpacity>
                       </View>
                     </>
