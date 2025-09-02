@@ -8,11 +8,33 @@
             "runtime": "node-22",
             "specification": "s-0.5vcpu-512mb",
             "execute": [
-                "any"
+                "any",
+                "guests",
+                "users"
             ],
             "events": [],
             "scopes": [
-                "users.read"
+                "users.read",
+                "databases.read",
+                "databases.write",
+                "tables.read",
+                "collections.read",
+                "tables.write",
+                "collections.write",
+                "columns.read",
+                "attributes.read",
+                "columns.write",
+                "attributes.write",
+                "indexes.read",
+                "indexes.write",
+                "rows.read",
+                "documents.read",
+                "rows.write",
+                "documents.write",
+                "functions.read",
+                "functions.write",
+                "execution.read",
+                "execution.write"
             ],
             "schedule": "",
             "timeout": 15,
@@ -21,6 +43,46 @@
             "entrypoint": "src/main.js",
             "commands": "npm install",
             "path": "functions/Manager"
+        },
+        {
+            "$id": "68b255890021ddcf41f5",
+            "name": "Players",
+            "runtime": "node-22",
+            "specification": "s-0.5vcpu-512mb",
+            "execute": [
+                "any"
+            ],
+            "events": [],
+            "scopes": [
+                "users.read",
+                "databases.read",
+                "databases.write",
+                "tables.read",
+                "collections.read",
+                "tables.write",
+                "collections.write",
+                "columns.read",
+                "attributes.read",
+                "columns.write",
+                "attributes.write",
+                "indexes.read",
+                "indexes.write",
+                "rows.read",
+                "documents.read",
+                "rows.write",
+                "documents.write",
+                "functions.read",
+                "functions.write",
+                "execution.read",
+                "execution.write"
+            ],
+            "schedule": "",
+            "timeout": 15,
+            "enabled": true,
+            "logging": true,
+            "entrypoint": "src/main.js",
+            "commands": "npm install",
+            "path": "functions/Players"
         }
     ]
 }
