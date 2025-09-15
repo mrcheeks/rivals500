@@ -3,50 +3,8 @@
     "endpoint": "https://syd.cloud.appwrite.io/v1",
     "functions": [
         {
-            "$id": "68afe5be001c82fb49d6",
-            "name": "Manager",
-            "runtime": "node-22",
-            "specification": "s-0.5vcpu-512mb",
-            "execute": [
-                "any",
-                "guests",
-                "users"
-            ],
-            "events": [],
-            "scopes": [
-                "users.read",
-                "databases.read",
-                "databases.write",
-                "tables.read",
-                "collections.read",
-                "tables.write",
-                "collections.write",
-                "columns.read",
-                "attributes.read",
-                "columns.write",
-                "attributes.write",
-                "indexes.read",
-                "indexes.write",
-                "rows.read",
-                "documents.read",
-                "rows.write",
-                "documents.write",
-                "functions.read",
-                "functions.write",
-                "execution.read",
-                "execution.write"
-            ],
-            "schedule": "",
-            "timeout": 15,
-            "enabled": true,
-            "logging": true,
-            "entrypoint": "src/main.js",
-            "commands": "npm install",
-            "path": "functions/Manager"
-        },
-        {
-            "$id": "68b255890021ddcf41f5",
-            "name": "Players",
+            "$id": "68b91bc900338ab6c999",
+            "name": "WelcomeEmail",
             "runtime": "node-22",
             "specification": "s-0.5vcpu-512mb",
             "execute": [
@@ -54,27 +12,7 @@
             ],
             "events": [],
             "scopes": [
-                "users.read",
-                "databases.read",
-                "databases.write",
-                "tables.read",
-                "collections.read",
-                "tables.write",
-                "collections.write",
-                "columns.read",
-                "attributes.read",
-                "columns.write",
-                "attributes.write",
-                "indexes.read",
-                "indexes.write",
-                "rows.read",
-                "documents.read",
-                "rows.write",
-                "documents.write",
-                "functions.read",
-                "functions.write",
-                "execution.read",
-                "execution.write"
+                "users.read"
             ],
             "schedule": "",
             "timeout": 15,
@@ -82,7 +20,7 @@
             "logging": true,
             "entrypoint": "src/main.js",
             "commands": "npm install",
-            "path": "functions/Players"
+            "path": "functions/WelcomeEmail"
         }
     ]
 }
