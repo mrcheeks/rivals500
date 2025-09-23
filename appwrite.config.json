@@ -19,7 +19,7 @@
             "enabled": true,
             "logging": true,
             "entrypoint": "src/main.js",
-            "commands": "npm install",
+            "commands": "npm install nodemailer",
             "path": "functions/WelcomeEmail"
         }
     ]
